@@ -179,6 +179,12 @@ input, select, textarea {
 }
 input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 0; border-color: transparent; }
 form .btn { justify-self: start; }
+.fields { display: grid; gap: 16px; transition: opacity .2s; }
+.fields[inert] { opacity: .55; }
+.check { display: grid; gap: 14px; padding: 16px; border: 1px dashed var(--accent); border-radius: 12px; background: rgba(var(--pixel), .06); }
+.check[hidden] { display: none; }
+.check img { width: 100%; height: auto; aspect-ratio: 3 / 2; object-fit: cover; border-radius: 10px; background: var(--bg-alt); }
+.check b { font-weight: 600; }
 form .btn:disabled { opacity: .6; cursor: progress; transform: none; box-shadow: none; }
 .hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
 .form-status { min-height: 1.6em; font-size: 15px; color: var(--muted); }

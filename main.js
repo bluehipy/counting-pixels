@@ -44,31 +44,75 @@
     items.forEach(function (el) { el.classList.add('in'); });
   }
 
-  /* ---------- Contact form ---------- */
+  /* ---------- Contact form (two steps: send, then answer the human check) ---------- */
   var form = document.getElementById('form');
   var status = document.getElementById('form-status');
-  form.addEventListener('submit', function (e) {
-    e.preventDefault();
-    var btn = form.querySelector('button[type="submit"]');
-    var data = {};
-    new FormData(form).forEach(function (v, k) { data[k] = v; });
-    btn.disabled = true;
-    status.className = 'form-status';
-    status.textContent = 'Sending…';
-    fetch(form.getAttribute('action'), {
+  var btn = document.getElementById('form-btn');
+  var fields = document.getElementById('fields');
+  var check = document.getElementById('check');
+  var checkImg = document.getElementById('check-img');
+  var checkQ = document.getElementById('check-q');
+  var checkA = document.getElementById('check-a');
+  var loadedAt = Date.now();
+  var challengeId = null;
+
+  function say(msg, cls) { status.className = 'form-status ' + (cls || ''); status.textContent = msg; }
+  function showChallenge(c) {
+    challengeId = c.id;
+    checkImg.src = c.image;
+    checkQ.textContent = c.question;
+    checkA.value = '';
+    checkA.required = true;
+    check.hidden = false;
+    fields.inert = true;
+    btn.textContent = 'Verify & send';
+    checkA.focus();
+  }
+  function resetCheck() {
+    challengeId = null;
+    check.hidden = true;
+    checkA.required = false;
+    fields.inert = false;
+    btn.textContent = 'Send message';
+  }
+  function post(url, body) {
+    return fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
+      body: JSON.stringify(body)
     }).then(function (r) {
       return r.json().catch(function () { return {}; }).then(function (j) {
-        if (!r.ok) throw new Error(j.error || 'Something went wrong');
-        form.reset();
-        status.className = 'form-status ok';
-        status.textContent = 'Thanks! We’ll get back to you within one business day.';
+        if (!r.ok) { var e = new Error(j.error || 'Something went wrong'); e.status = r.status; throw e; }
+        return j;
       });
+    });
+  }
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    btn.disabled = true;
+    say(challengeId ? 'Checking…' : 'Sending…');
+    var req;
+    if (challengeId) {
+      req = post('/api/contact/confirm', { id: challengeId, answer: checkA.value });
+    } else {
+      var data = {};
+      new FormData(form).forEach(function (v, k) { data[k] = v; });
+      data.ms = Date.now() - loadedAt;
+      req = post(form.getAttribute('action'), data);
+    }
+    req.then(function (j) {
+      if (j.challenge) {
+        showChallenge(j.challenge);
+        say(j.retry ? j.error + '.' : 'One last step: answer the question to prove you are human.', j.retry ? 'err' : '');
+      } else {
+        form.reset();
+        resetCheck();
+        say('Thanks! We’ll get back to you within one business day.', 'ok');
+      }
     }).catch(function (err) {
-      status.className = 'form-status err';
-      status.textContent = err.message + '.';
+      if (err.status === 410) resetCheck(); // expired / too many wrong answers: start over, message is kept
+      say(err.message + '.', 'err');
     }).then(function () { btn.disabled = false; });
   });
 

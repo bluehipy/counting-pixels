@@ -204,19 +204,26 @@
           </div>
           <form id="form" action="/api/contact" method="post">
             <label class="hp" aria-hidden="true">Website <input name="website" type="text" tabindex="-1" autocomplete="off"></label>
-            <label>Name <input name="name" type="text" autocomplete="name" required></label>
-            <label>Email <input name="email" type="email" autocomplete="email" required></label>
-            <label>Interested in
-              <select name="topic">
-                <option>Design</option>
-                <option>Photography</option>
-                <option>Software development</option>
-                <option>AI agents &amp; automation</option>
-                <option>Something else</option>
-              </select>
-            </label>
-            <label>Message <textarea name="message" rows="4" required></textarea></label>
-            <button class="btn" type="submit">Send message</button>
+            <div class="fields" id="fields">
+              <label>Name <input name="name" type="text" autocomplete="name" required></label>
+              <label>Email <input name="email" type="email" autocomplete="email" required></label>
+              <label>Interested in
+                <select name="topic">
+                  <option>Design</option>
+                  <option>Photography</option>
+                  <option>Software development</option>
+                  <option>AI agents &amp; automation</option>
+                  <option>Something else</option>
+                </select>
+              </label>
+              <label>Message <textarea name="message" rows="4" required></textarea></label>
+            </div>
+            <div class="check" id="check" hidden>
+              <img id="check-img" alt="" width="600" height="400">
+              <label><span>Quick human check: <b id="check-q"></b></span>
+                <input id="check-a" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Your answer"></label>
+            </div>
+            <button class="btn" type="submit" id="form-btn">Send message</button>
             <p class="form-status" id="form-status" role="status" aria-live="polite"></p>
           </form>
         </div>
