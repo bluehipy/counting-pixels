@@ -44,6 +44,34 @@
     items.forEach(function (el) { el.classList.add('in'); });
   }
 
+  /* ---------- Contact form ---------- */
+  var form = document.getElementById('form');
+  var status = document.getElementById('form-status');
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var btn = form.querySelector('button[type="submit"]');
+    var data = {};
+    new FormData(form).forEach(function (v, k) { data[k] = v; });
+    btn.disabled = true;
+    status.className = 'form-status';
+    status.textContent = 'Sending…';
+    fetch(form.getAttribute('action'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    }).then(function (r) {
+      return r.json().catch(function () { return {}; }).then(function (j) {
+        if (!r.ok) throw new Error(j.error || 'Something went wrong');
+        form.reset();
+        status.className = 'form-status ok';
+        status.textContent = 'Thanks! We’ll get back to you within one business day.';
+      });
+    }).catch(function (err) {
+      status.className = 'form-status err';
+      status.textContent = err.message + '. You can also email us directly.';
+    }).then(function () { btn.disabled = false; });
+  });
+
   /* ---------- Pixel avatars (deterministic, symmetric) ---------- */
   document.querySelectorAll('.avatar').forEach(function (el) {
     var seed = +el.dataset.seed * 9301 + 49297;

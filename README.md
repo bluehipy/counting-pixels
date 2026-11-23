@@ -1,16 +1,26 @@
 # counting-pixels
 
-Static landing page for countingpixels.com — plain HTML, CSS and JS, no build step.
+Landing page for countingpixels.com. Static HTML/CSS/JS served by a tiny Node
+server (`server.js`) that also handles the contact form (`POST /api/contact`)
+and emails it via SMTP.
 
-- `index.html`, `styles.css`, `main.js`, `favicon.svg` — the site
-- `Dockerfile` + `nginx.conf` — serves the files with nginx on port 80
+## Environment variables (set in Coolify)
 
-## Local preview
+| Variable    | Purpose                                                  |
+|-------------|----------------------------------------------------------|
+| `MAIL_TO`   | Recipient of contact messages (default `jobs@countingpixels.com`) |
+| `MAIL_FROM` | Sender address, should belong to your SMTP domain (default: `MAIL_TO`) |
+| `SMTP_HOST` | SMTP server. If unset, emails are only logged            |
+| `SMTP_PORT` | Default 587 (465 = implicit TLS)                         |
+| `SMTP_USER` / `SMTP_PASS` | SMTP credentials                           |
+| `PORT`      | Default 3000                                             |
 
-    docker build -t countingpixels . && docker run --rm -p 8080:80 countingpixels
+## Local
 
-or just open `index.html` in a browser.
+    npm install && npm start            # http://localhost:3000, mails are logged
+    docker build -t countingpixels . && docker run --rm -p 8080:3000 countingpixels
 
 ## Deploy (Coolify)
 
-Create an application from this Git repo with the **Dockerfile** build pack and port **80**.
+Application from this Git repo, **Dockerfile** build pack, port **3000**,
+plus the env vars above. Health check path: `/healthz`.

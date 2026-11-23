@@ -1,6 +1,11 @@
-FROM nginx:1.27-alpine
+FROM node:22-alpine
 
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-COPY index.html styles.css main.js favicon.svg /usr/share/nginx/html/
+WORKDIR /app
+COPY package.json ./
+RUN npm install --omit=dev && npm cache clean --force
+COPY server.js index.html styles.css main.js favicon.svg ./
 
-EXPOSE 80
+ENV NODE_ENV=production PORT=3000
+EXPOSE 3000
+USER node
+CMD ["node", "server.js"]
