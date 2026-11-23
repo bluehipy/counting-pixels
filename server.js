@@ -1,21 +1,23 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
-const nodemailer = require('nodemailer');
 
 const PORT = process.env.PORT || 3000;
-const { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, MAIL_TO, MAIL_FROM } = process.env;
+const { RESEND_API_KEY, MAIL_TO, MAIL_FROM } = process.env;
+const TO = MAIL_TO || 'jobs@countingpixels.com';
+const FROM = MAIL_FROM || 'Counting Pixels <no-reply@countingpixels.com>';
 
-const transport = SMTP_HOST
-  ? nodemailer.createTransport({
-      host: SMTP_HOST,
-      port: Number(SMTP_PORT) || 587,
-      secure: Number(SMTP_PORT) === 465,
-      auth: SMTP_USER ? { user: SMTP_USER, pass: SMTP_PASS } : undefined,
-    })
-  : nodemailer.createTransport({ jsonTransport: true }); // dev: log instead of send
+if (!RESEND_API_KEY) console.warn('RESEND_API_KEY not set: emails will be logged, not sent');
 
-if (!SMTP_HOST) console.warn('SMTP_HOST not set: emails will be logged, not sent');
+async function sendMail(mail) {
+  if (!RESEND_API_KEY) return console.log(JSON.stringify(mail));
+  const r = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(mail),
+  });
+  if (!r.ok) throw new Error(`Resend ${r.status}: ${await r.text()}`);
+}
 
 const FILES = {
   '/': 'index.html',
@@ -81,14 +83,13 @@ async function contact(req, res) {
   }
 
   try {
-    const info = await transport.sendMail({
-      from: MAIL_FROM || MAIL_TO || 'jobs@countingpixels.com',
-      to: MAIL_TO || 'jobs@countingpixels.com',
-      replyTo: `"${name.replace(/["\r\n]/g, '')}" <${email}>`,
+    await sendMail({
+      from: FROM,
+      to: [TO],
+      reply_to: `${name.replace(/[<>"\r\n]/g, '')} <${email}>`,
       subject: `[countingpixels.com] ${topic || 'Contact'} — ${name}`.replace(/[\r\n]/g, ' '),
       text: `Name: ${name}\nEmail: ${email}\nTopic: ${topic}\n\n${message}\n`,
     });
-    if (!SMTP_HOST) console.log(info.message);
     json(res, 200, { ok: true });
   } catch (err) {
     console.error('sendMail failed:', err.message);
