@@ -68,7 +68,7 @@
       });
     }).catch(function (err) {
       status.className = 'form-status err';
-      status.textContent = err.message + '. You can also email us directly.';
+      status.textContent = err.message + '.';
     }).then(function () { btn.disabled = false; });
   });
 
